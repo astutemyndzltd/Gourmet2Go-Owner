@@ -29,7 +29,12 @@ Future<Stream<Notification>> getNotifications() async {
     final client = new http.Client();
     final streamedRest = await client.send(http.Request('get', uri));
 
-    return streamedRest.stream.transform(utf8.decoder).transform(json.decoder).map((data) => Helper.getData(data)).expand((data) => (data as List)).map((data) {
+    return streamedRest.stream
+        .transform(utf8.decoder)
+        .transform(json.decoder)
+        .map((data) => Helper.getData(data))
+        .expand((data) => (data as List))
+        .map((data) {
       return Notification.fromJSON(data);
     });
   } catch (e) {
@@ -44,14 +49,16 @@ Future<Notification> markAsReadNotifications(Notification notification) async {
     return new Notification();
   }
   final String _apiToken = 'api_token=${_user.apiToken}';
-  final String url = '${GlobalConfiguration().getValue('api_base_url')}notifications/${notification.id}?$_apiToken';
+  final String url =
+      '${GlobalConfiguration().getValue('api_base_url')}notifications/${notification.id}?$_apiToken';
   final client = new http.Client();
   final response = await client.put(
     url,
     headers: {HttpHeaders.contentTypeHeader: 'application/json'},
     body: json.encode(notification.markReadMap()),
   );
-  print("[${response.statusCode}] NotificationRepository markAsReadNotifications");
+  print(
+      "[${response.statusCode}] NotificationRepository markAsReadNotifications");
   return Notification.fromJSON(json.decode(response.body)['data']);
 }
 
@@ -61,7 +68,8 @@ Future<Notification> removeNotification(Notification cart) async {
     return new Notification();
   }
   final String _apiToken = 'api_token=${_user.apiToken}';
-  final String url = '${GlobalConfiguration().getValue('api_base_url')}notifications/${cart.id}?$_apiToken';
+  final String url =
+      '${GlobalConfiguration().getValue('api_base_url')}notifications/${cart.id}?$_apiToken';
   final client = new http.Client();
   final response = await client.delete(
     url,
@@ -73,9 +81,13 @@ Future<Notification> removeNotification(Notification cart) async {
 
 Future<void> sendNotification(String body, String title, User user) async {
   final data = {
-    "notification": {"body": "$body", "title": "$title"},
+    "notification": {"body": "$body", "title": "$title", "sound": "default"},
     "priority": "high",
-    "data": {"click_action": "FLUTTER_NOTIFICATION_CLICK", "id": "messages", "status": "done"},
+    "data": {
+      "click_action": "FLUTTER_NOTIFICATION_CLICK",
+      "id": "messages",
+      "status": "done"
+    },
     "to": "${user.deviceToken}"
   };
   final String url = 'https://fcm.googleapis.com/fcm/send';
